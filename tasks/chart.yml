@@ -1,0 +1,67 @@
+---
+
+# These tasks install a chart using Helm
+
+- name: Initialise Helm
+  command: helm init
+
+- name: Update installed Helm repositories
+  command: helm repo update
+  when: helm_release_update_repos
+
+- block:
+    - name: Ensure Helm values directory exists
+      file:
+        path: "{{ helm_values_directory }}"
+        state: directory
+
+    - name: Write values file for release
+      copy:
+        content: "{{ helm_release_values | to_nice_yaml(indent=2) }}"
+        dest: "{{ helm_values_directory }}/{{ helm_release_name }}.yml"
+  when: helm_release_values is defined
+
+# Helm v3 is still pre-alpha and doesn't seem to respect the KUBECONFIG envvar
+# or --kubeconfig or --namespace flags at present
+# So update the default config
+
+- block:
+    - name: Ensure $HOME/.kube exists
+      file:
+        path: "{{ ansible_env.HOME }}/.kube"
+        state: directory
+
+    - name: Copy cluster kubeconfig to default location
+      copy:
+        remote_src: yes
+        src: "{{ helm_kubeconfig }}"
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+  when: helm_kubeconfig is defined
+
+- block:
+    - name: Ensure the target namespace exists
+      command: kubectl create namespace {{ helm_release_namespace }}
+      register: kubectl_create_ns
+      changed_when: kubectl_create_ns.rc == 0
+      failed_when: >
+        kubectl_create_ns.rc != 0 and
+        'AlreadyExists' not in kubectl_create_ns.stderr
+
+    - name: Get current kubectl context
+      command: kubectl config current-context
+      register: kubectl_current_ctx
+
+    - name: Set namespace for current kubectl context
+      command: kubectl config set-context {{ kubectl_current_ctx.stdout }} --namespace={{ helm_release_namespace }}
+  when: helm_release_namespace is defined
+
+- name: Install or upgrade release
+  command: >
+    helm upgrade --install
+      {{ helm_release_name }}
+      {{ helm_release_chart }}
+      {% if helm_release_version is defined %}--version {{ helm_release_version }}{% endif %}
+      {% if helm_release_values is defined %}--values {{ helm_values_directory }}/{{ helm_release_name }}.yml{% endif %}
+      {% if helm_release_wait %}--wait --timeout {{ helm_release_wait_timeout }}{% endif %}
+      {% if helm_release_no_hooks %}--no-hooks{% endif %}
+      {% if helm_release_recreate_pods %}--recreate-pods{% endif %}

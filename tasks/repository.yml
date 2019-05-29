@@ -1,0 +1,9 @@
+---
+
+# These tasks install a Helm repository
+
+- name: Initialise Helm
+  command: helm init
+
+- name: Install Helm repository
+  command: helm repo add {{ helm_repo_name }} {{ helm_repo_url }}

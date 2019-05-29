@@ -1,0 +1,30 @@
+---
+
+- name: Ensure unpack destination exists
+  file:
+    path: /opt/helm/{{ helm_release }}
+    state: directory
+
+- name: Fetch Helm archive
+  get_url:
+    url: "{{ helm_archive_url }}"
+    checksum: "{{ helm_archive_checksum }}"
+    dest: "/opt/helm/{{ helm_archive_name }}"
+
+- name: Unpack Helm archive
+  unarchive:
+    remote_src: yes
+    src: "/opt/helm/{{ helm_archive_name }}"
+    dest: "/opt/helm/{{ helm_release }}"
+
+- name: Create latest symlink
+  file:
+    path: /opt/helm/latest
+    src: /opt/helm/{{ helm_release }}
+    state: link
+
+- name: Create symlink in /usr/local/bin
+  file:
+    path: /usr/local/bin/helm
+    src: /opt/helm/latest/linux-amd64/helm
+    state: link
