@@ -1,14 +1,19 @@
 ---
 
-helm_release: v3.0.0-alpha.1
+helm_release: v2.14.0
 helm_archive_name: helm-{{ helm_release }}-linux-amd64.tar.gz
-helm_archive_url: https://get.helm.sh/{{ helm_archive_name }}
-helm_archive_checksum: sha256:12632bdf85144d8883de07d257f892f447a8bccc84de82276e111059ac8437b1
+helm_archive_url: https://storage.googleapis.com/kubernetes-helm/{{ helm_archive_name }}
+helm_archive_checksum: sha256:b5f6a1e642971af1363cadbe1f7f37c029c11dd93813151b521c0dbeacfbdaa9
+
+helm_tls_ca_subject: "/CN=Helm CA"
+helm_tls_server_subject: "/CN=tiller"
+helm_tls_client_subject: "/CN=Helm client"
 
 helm_values_directory: "{{ ansible_env.HOME }}/helm-values"
 
+helm_release_update_repos: true
 helm_release_no_hooks: false
 helm_release_recreate_pods: false
+helm_release_force: false
 helm_release_wait: true
-helm_release_wait_timeout: "5m0s"
-helm_release_update_repos: true
+helm_release_wait_timeout: 300
