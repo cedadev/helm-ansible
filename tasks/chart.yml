@@ -13,10 +13,10 @@
         state: directory
 
     - name: Write values file for release
-      copy:
-        content: "{{ helm_release_values | to_nice_yaml(indent=2) }}"
+      template:
+        src: "{{ helm_release_values_template }}"
         dest: "{{ helm_values_directory }}/{{ helm_release_name }}.yml"
-  when: helm_release_values is defined
+  when: helm_release_values_template is defined
 
 - name: Install or upgrade release
   command: >
