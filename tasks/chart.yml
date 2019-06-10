@@ -24,7 +24,7 @@
       {{ helm_release_name }}
       {{ helm_release_chart }}
       {% if helm_release_version is defined %}--version {{ helm_release_version }}{% endif %}
-      {% if helm_release_values is defined %}--values {{ helm_values_directory }}/{{ helm_release_name }}.yml{% endif %}
+      {% if helm_release_values_template is defined %}--values {{ helm_values_directory }}/{{ helm_release_name }}.yml{% endif %}
       {% if helm_release_namespace is defined %}--namespace {{ helm_release_namespace }}{% endif %}
       {% if helm_release_wait %}--wait --timeout {{ helm_release_wait_timeout }}{% endif %}
       {% if helm_release_no_hooks %}--no-hooks{% endif %}
