@@ -105,3 +105,20 @@
 
 - name: Ensure tiller has started
   shell: kubectl -n kube-system rollout status deployment tiller-deploy
+
+- name: Get Helm home
+  command: helm home
+  register: helm_home
+
+- name: Configure TLS for Helm client
+  copy:
+    remote_src: yes
+    src: "{{ item.src }}"
+    dest: "{{ helm_home.stdout }}/{{ item.dest }}"
+  loop:
+    - src: /etc/helm/tls/ca.key
+      dest: ca.pem
+    - src: /etc/helm/tls/client.crt
+      dest: cert.pem
+    - src: /etc/helm/tls/client.key
+      dest: key.pem
