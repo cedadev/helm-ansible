@@ -16,4 +16,4 @@ helm_release_no_hooks: false
 helm_release_recreate_pods: false
 helm_release_force: false
 helm_release_wait: true
-helm_release_wait_timeout: 300
+helm_release_wait_timeout: 600
