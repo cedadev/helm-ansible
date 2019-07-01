@@ -30,6 +30,7 @@
       {% if helm_release_no_hooks %}--no-hooks{% endif %}
       {% if helm_release_recreate_pods %}--recreate-pods{% endif %}
       {% if helm_release_force %}--force{% endif %}
+      {% if helm_release_extra_args is defined %}{{ helm_release_extra_args | join(' ') }}{% endif %}
       {% if helm_kubeconfig is defined %}--kubeconfig {{ helm_kubeconfig }}{% endif %}
       --tls
       --tls-ca-cert /etc/helm/tls/ca.crt
