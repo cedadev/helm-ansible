@@ -2,37 +2,48 @@
 
 # These tasks install a chart using Helm
 
-- name: Update installed Helm repositories
-  command: helm repo update
-  when: helm_release_update_repos
-
 - block:
-    - name: Ensure Helm values directory exists
-      file:
-        path: "{{ helm_values_directory }}"
-        state: directory
+    - name: Update installed Helm repositories
+      command: helm repo update
+      when: helm_release_update_repos
 
-    - name: Write values file for release
-      template:
-        src: "{{ helm_release_values_template }}"
-        dest: "{{ helm_values_directory }}/{{ helm_release_name }}.yml"
-  when: helm_release_values_template is defined
+    - block:
+        - name: Ensure Helm values directory exists
+          file:
+            path: "{{ helm_values_directory }}"
+            state: directory
 
-- name: Install or upgrade release
+        - name: Write values file for release
+          template:
+            src: "{{ helm_release_values_template }}"
+            dest: "{{ helm_values_directory }}/{{ helm_release_name }}.yml"
+      when: helm_release_values_template is defined
+
+    - name: Install or upgrade release
+      command: >
+        helm upgrade {{ helm_release_name }} {{ helm_release_chart }}
+          --install
+          {% if helm_release_version is defined %}--version {{ helm_release_version }}{% endif %}
+          {% if helm_release_values_template is defined %}--values {{ helm_values_directory }}/{{ helm_release_name }}.yml{% endif %}
+          {% if helm_release_namespace is defined %}--namespace {{ helm_release_namespace }}{% endif %}
+          {% if helm_release_wait %}--wait --timeout {{ helm_release_wait_timeout }}{% endif %}
+          {% if helm_release_no_hooks %}--no-hooks{% endif %}
+          {% if helm_release_recreate_pods %}--recreate-pods{% endif %}
+          {% if helm_release_force %}--force{% endif %}
+          {% if helm_release_extra_args is defined %}{{ helm_release_extra_args | join(' ') }}{% endif %}
+          {% if helm_kubeconfig is defined %}--kubeconfig {{ helm_kubeconfig }}{% endif %}
+          --tls
+          --tls-ca-cert /etc/helm/tls/ca.crt
+          --tls-cert /etc/helm/tls/client.crt
+          --tls-key /etc/helm/tls/client.key
+  when: (helm_release_state | default('present') | lower) == 'present'
+
+- name: Remove release
   command: >
-    helm upgrade --install
-      {{ helm_release_name }}
-      {{ helm_release_chart }}
-      {% if helm_release_version is defined %}--version {{ helm_release_version }}{% endif %}
-      {% if helm_release_values_template is defined %}--values {{ helm_values_directory }}/{{ helm_release_name }}.yml{% endif %}
-      {% if helm_release_namespace is defined %}--namespace {{ helm_release_namespace }}{% endif %}
-      {% if helm_release_wait %}--wait --timeout {{ helm_release_wait_timeout }}{% endif %}
-      {% if helm_release_no_hooks %}--no-hooks{% endif %}
-      {% if helm_release_recreate_pods %}--recreate-pods{% endif %}
-      {% if helm_release_force %}--force{% endif %}
-      {% if helm_release_extra_args is defined %}{{ helm_release_extra_args | join(' ') }}{% endif %}
-      {% if helm_kubeconfig is defined %}--kubeconfig {{ helm_kubeconfig }}{% endif %}
+    helm delete {{ helm_release_name }}
+      --purge
       --tls
       --tls-ca-cert /etc/helm/tls/ca.crt
       --tls-cert /etc/helm/tls/client.crt
       --tls-key /etc/helm/tls/client.key
+  when: (helm_release_state | default('present') | lower) != 'present'
