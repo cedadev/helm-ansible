@@ -46,4 +46,9 @@
       --tls-ca-cert /etc/helm/tls/ca.crt
       --tls-cert /etc/helm/tls/client.crt
       --tls-key /etc/helm/tls/client.key
+  register: helm_delete_result
+  changed_when: helm_delete_result.rc == 0
+  failed_when: >
+    helm_delete_result.rc != 0 and
+    'not found' not in helm_delete_result.stderr
   when: (helm_release_state | default('present') | lower) != 'present'
