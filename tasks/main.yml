@@ -116,7 +116,7 @@
     src: "{{ item.src }}"
     dest: "{{ helm_home.stdout }}/{{ item.dest }}"
   loop:
-    - src: /etc/helm/tls/ca.key
+    - src: /etc/helm/tls/ca.crt
       dest: ca.pem
     - src: /etc/helm/tls/client.crt
       dest: cert.pem
