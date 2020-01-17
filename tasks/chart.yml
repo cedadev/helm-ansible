@@ -42,7 +42,7 @@
   when: (helm_release_state | default('present') | lower) == 'present'
 
 - name: Remove release
-  command: helm delete {{ helm_release_name }}
+  command: helm delete {% if helm_release_namespace is defined %}--namespace {{ helm_release_namespace }}{% endif %} {{ helm_release_name }}
   register: helm_delete_result
   changed_when: helm_delete_result.rc == 0
   failed_when: >
