@@ -19,6 +19,13 @@
             dest: "{{ helm_values_directory }}/{{ helm_release_name }}.yml"
       when: helm_release_values_template is defined
 
+    - name: Ensure namespace exists
+      command: kubectl create namespace {{ helm_release_namespace }}
+      register: kubectl_create_ns
+      changed_when: kubectl_create_ns.rc == 0
+      failed_when: kubectl_create_ns.rc != 0 and 'AlreadyExists' not in kubectl_create_ns.stderr
+      when: helm_release_namespace is defined
+
     - name: Install or upgrade release
       command: >
         helm upgrade {{ helm_release_name }} {{ helm_release_chart }}
@@ -32,20 +39,10 @@
           {% if helm_release_force %}--force{% endif %}
           {% if helm_release_extra_args is defined %}{{ helm_release_extra_args | join(' ') }}{% endif %}
           {% if helm_kubeconfig is defined %}--kubeconfig {{ helm_kubeconfig }}{% endif %}
-          --tls
-          --tls-ca-cert /etc/helm/tls/ca.crt
-          --tls-cert /etc/helm/tls/client.crt
-          --tls-key /etc/helm/tls/client.key
   when: (helm_release_state | default('present') | lower) == 'present'
 
 - name: Remove release
-  command: >
-    helm delete {{ helm_release_name }}
-      --purge
-      --tls
-      --tls-ca-cert /etc/helm/tls/ca.crt
-      --tls-cert /etc/helm/tls/client.crt
-      --tls-key /etc/helm/tls/client.key
+  command: helm delete {{ helm_release_name }}
   register: helm_delete_result
   changed_when: helm_delete_result.rc == 0
   failed_when: >
