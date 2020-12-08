@@ -35,7 +35,6 @@
           {% if helm_release_namespace is defined %}--namespace {{ helm_release_namespace }}{% endif %}
           {% if helm_release_wait %}--wait --timeout {{ helm_release_wait_timeout }}{% endif %}
           {% if helm_release_no_hooks %}--no-hooks{% endif %}
-          {% if helm_release_recreate_pods %}--recreate-pods{% endif %}
           {% if helm_release_force %}--force{% endif %}
           {% if helm_release_extra_args is defined %}{{ helm_release_extra_args | join(' ') }}{% endif %}
           {% if helm_kubeconfig is defined %}--kubeconfig {{ helm_kubeconfig }}{% endif %}
